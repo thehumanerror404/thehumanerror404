@@ -173,9 +173,8 @@ export default function ResultPage() {
                 window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
                 break;
             case 'linkedin':
-                // LinkedIn doesn't support pre-filled text easily, just URL. But we can try to put it in summary if possible, or just share URL.
-                // Actually LinkedIn sharing is limited to URL usually.
-                window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank');
+                // Use the feed share URL to allow pre-filling text
+                window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`, '_blank');
                 break;
             case 'facebook':
                 window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');

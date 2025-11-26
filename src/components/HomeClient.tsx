@@ -66,17 +66,47 @@ export default function HomeClient({ aboutContent }: HomeClientProps) {
         }
     };
 
-    const handleContactSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const subject = `Contact from Human Error 404: ${contactName}`;
-        const body = `Name: ${contactName}\nEmail: ${contactEmail}\n\nMessage:\n${contactMessage}`;
-        const mailtoLink = `mailto:thehumanerror404@proton.me?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const [isSending, setIsSending] = useState(false);
+    const [sendResult, setSendResult] = useState<{ success: boolean; message: string } | null>(null);
 
-        window.location.href = mailtoLink;
-        setShowContact(false);
-        setContactName('');
-        setContactEmail('');
-        setContactMessage('');
+    const handleContactSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSending(true);
+        setSendResult(null);
+
+        try {
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: contactName,
+                    email: contactEmail,
+                    message: contactMessage,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSendResult({ success: true, message: 'Message sent successfully!' });
+                setContactName('');
+                setContactEmail('');
+                setContactMessage('');
+                // Close modal after a short delay
+                setTimeout(() => {
+                    setShowContact(false);
+                    setSendResult(null);
+                }, 2000);
+            } else {
+                setSendResult({ success: false, message: data.error?.message || 'Failed to send message.' });
+            }
+        } catch (error) {
+            setSendResult({ success: false, message: 'An error occurred. Please try again.' });
+        } finally {
+            setIsSending(false);
+        }
     };
 
     // Helper to render markdown content simply
@@ -285,9 +315,14 @@ export default function HomeClient({ aboutContent }: HomeClientProps) {
                             placeholder="Tell me something..."
                         />
                     </div>
-                    <div className="pt-4">
-                        <Button type="submit" className="w-full">
-                            Send Message
+                    <div className="pt-4 space-y-3">
+                        {sendResult && (
+                            <div className={`text-sm p-3 rounded-md ${sendResult.success ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                {sendResult.message}
+                            </div>
+                        )}
+                        <Button type="submit" className="w-full" disabled={isSending}>
+                            {isSending ? 'Sending...' : 'Send Message'}
                         </Button>
                     </div>
                 </form>
